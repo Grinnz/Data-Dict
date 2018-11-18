@@ -12,13 +12,13 @@ Data::Dict - Hash-based dictionary object
   delete $dictionary->{b};
   print join "\n", $dictionary->keys;
 
-  $dictionary->slice(qw(a b))->grep(sub { defined $_->[1] })->each(sub {
+  $dictionary->slice(qw(a b))->grep(sub { defined $_[1] })->each(sub {
     my ($key, $value) = @_;
     print "$key: $value\n";
   });
 
   use Data::Dict 'd';
-  d(%counts)->values(sub { $_++ });
+  my $num_highest = d(%counts)->transform(sub { $_[1]++ })->grep(sub { $_[1] > 5 })->size;
 
 =head1 DESCRIPTION
 
