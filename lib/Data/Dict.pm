@@ -3,7 +3,6 @@ package Data::Dict;
 use strict;
 use warnings;
 use Exporter 'import';
-use List::Util 1.29 'pairgrep';
 
 our $VERSION = '0.001';
 
@@ -27,8 +26,8 @@ sub each {
 
 sub grep {
   my ($self, $cb) = @_;
-  return $self->new(pairgrep { $a =~ $cb } %$self) if ref $cb eq 'Regexp';
-  return $self->new(pairgrep { local $_ = $a; $cb->($a, $b) } %$self);
+  return $self->new(map { ($_ => $self->{$_}) } grep { m/$cb/ } sort keys %$self) if ref $cb eq 'Regexp';
+  return $self->new(map { ($_ => $self->{$_}) } grep { $cb->($_, $self->{$_}) } sort keys %$self);
 }
 
 sub map {
@@ -124,9 +123,10 @@ Alias for L</"to_hash">.
   my @pairs = $dict->each;
   $dict     = $dict->each(sub {...});
 
-Evaluate callback for each pair in the dictionary, or return pairs as list of
-key/value arrayrefs if none has been provided. The callback will receive the
-key and value as arguments, and the key is also available as C<$_>.
+Evaluate callback for each pair in the dictionary in sorted-key order, or
+return pairs as list of key/value arrayrefs in sorted-key order if none has
+been provided. The callback will receive the key and value as arguments, and
+the key is also available as C<$_>.
 
   $dict->each(sub {
     my ($key, $value) = @_;
@@ -139,10 +139,10 @@ key and value as arguments, and the key is also available as C<$_>.
   my $new = $dict->grep(sub {...});
 
 Evaluate regular expression on each key, or call callback on each key/value
-pair in the dictionary, and return a new dictionary with all pairs that matched
-the regular expression, or for which the callback returned true. The callback
-will receive the key and value as arguments, and the key is also available as
-C<$_>.
+pair in the dictionary in sorted-key order, and return a new dictionary with
+all pairs that matched the regular expression, or for which the callback
+returned true. The callback will receive the key and value as arguments, and
+the key is also available as C<$_>.
 
   my $banana_dict = $dict->grep(qr/banana/);
 
@@ -153,17 +153,17 @@ C<$_>.
   my @keys = $dict->keys;
   $dict    = $dict->keys(sub {...});
 
-Evaluate callback for each key in the dictionary, or return all keys as a list
-if none has been provided. The key will be the first argument passed to the
-callback, and is also available as C<$_>.
+Evaluate callback for each key in the dictionary in sorted-key order, or return
+all keys as a sorted list if none has been provided. The key will be the first
+argument passed to the callback, and is also available as C<$_>.
 
 =head2 map
 
   my @results = $dict->map(sub { ... });
 
-Evaluate callback for each key/value pair in the dictionary and return the
-results as a list. The callback will receive the key and value as arguments,
-and the key is also available as C<$_>.
+Evaluate callback for each key/value pair in the dictionary in sorted-key order
+and return the results as a list. The callback will receive the key and value
+as arguments, and the key is also available as C<$_>.
 
   my @pairs = $dict->map(sub { [@_] });
 
@@ -194,7 +194,7 @@ the callback, and is also available as C<$_>.
 
   my $array = $dict->to_array;
 
-Turn dictionary into even-sized array reference.
+Turn dictionary into even-sized array reference in sorted-key order.
 
 =head2 to_hash
 
@@ -207,9 +207,10 @@ Turn dictionary into hash reference.
   my @values = $dict->values;
   $dict      = $dict->values(sub {...});
 
-Evaluate callback for each value in the dictionary, or return all values as a
-list if none has been provided. The value will be the first argument passed to
-the callback, and is also available as C<$_>.
+Evaluate callback for each value in the dictionary in sorted-key order, or
+return all values as a list in sorted-key order if none has been provided. The
+value will be the first argument passed to the callback, and is also available
+as C<$_>.
 
 =head1 BUGS
 

@@ -17,8 +17,7 @@ my %WriteMakefileArgs = (
   "MIN_PERL_VERSION" => "5.008001",
   "NAME" => "Data::Dict",
   "PREREQ_PM" => {
-    "Exporter" => "5.57",
-    "List::Util" => "1.29"
+    "Exporter" => "5.57"
   },
   "TEST_REQUIRES" => {
     "ExtUtils::MakeMaker" => 0,
@@ -36,7 +35,6 @@ my %FallbackPrereqs = (
   "Exporter" => "5.57",
   "ExtUtils::MakeMaker" => 0,
   "File::Spec" => 0,
-  "List::Util" => "1.29",
   "Test::More" => "0.88"
 );
 
