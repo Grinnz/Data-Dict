@@ -2,18 +2,206 @@ package Data::Dict;
 
 use strict;
 use warnings;
+use Exporter 'import';
+use List::Util 1.29 'pairgrep';
 
 our $VERSION = '0.001';
+
+our @EXPORT_OK = 'd';
+
+sub d { __PACKAGE__->new(@_) }
+
+sub new {
+  my $class = shift;
+  return bless {@_}, ref $class || $class;
+}
+
+sub TO_JSON { +{%{$_[0]}} }
+
+sub each {
+  my ($self, $cb) = @_;
+  return map { [$_, $self->{$_}] } sort CORE::keys %$self unless $cb;
+  $cb->($_, $self->{$_}) for sort CORE::keys %$self;
+  return $self;
+}
+
+sub grep {
+  my ($self, $cb) = @_;
+  return $self->new(pairgrep { $a =~ $cb } %$self) if ref $cb eq 'Regexp';
+  return $self->new(pairgrep { local $_ = $a; $cb->($a, $b) } %$self);
+}
+
+sub keys {
+  my ($self, $cb) = @_;
+  return sort keys %$self unless $cb;
+  $cb->($_) for sort keys %$self;
+  return $self;
+}
+
+sub map {
+  my ($self, $cb) = @_;
+  return map { $cb->($_, $self->{$_}) } sort CORE::keys %$self;
+}
+
+sub size { scalar CORE::keys %{$_[0]} }
+
+sub slice {
+  my ($self, @keys) = @_;
+  return $self->new(map { ($_ => $self->{$_}) } @keys);
+}
+
+sub tap {
+  my ($self, $cb) = (shift, shift);
+  $_->$cb(@_) for $self;
+  return $self;
+}
+
+sub to_array { [%{$_[0]}] }
+
+sub to_hash { +{%{$_[0]}} }
+
+sub values {
+  my ($self, $cb) = (shift, shift);
+  return map { $self->{$_} } sort CORE::keys %$self unless $cb;
+  $_->$cb(@_) for map { $self->{$_} } sort CORE::keys %$self;
+  return $self;
+}
 
 1;
 
 =head1 NAME
 
-Data::Dict - Module abstract
+Data::Dict - Hash-based dictionary object
 
 =head1 SYNOPSIS
 
+  use Data::Dict;
+
+  my $dictionary = Data::Dict->new(a => 1, b => 2, c => 3);
+  delete $dictionary->{b};
+  say join "\n", $dictionary->keys;
+
+  $dictionary->slice(qw(a b))->grep(sub { defined $_[1] })->each(sub {
+    my ($key, $value) = @_;
+    say "$key: $value";
+  });
+
+  use Data::Dict 'd';
+  d(%counts)->values(sub { $_++ });
+
 =head1 DESCRIPTION
+
+=head1 FUNCTIONS
+
+=head2 d
+
+  my $dict = d(a => 1, b => 2);
+
+Construct a new hash-based L<Data::Dict> object. Imported on demand.
+
+=head1 METHODS
+
+=head2 new
+
+  my $dict = Data::Dict->new(a => 1, b => 2);
+
+Construct a new hash-based L<Data::Dict> object.
+
+=head2 TO_JSON
+
+Alias for L</"to_hash">.
+
+=head2 each
+
+  my @pairs = $dict->each;
+  $dict     = $dict->each(sub {...});
+
+Evaluate callback for each pair in the dictionary, or return pairs as list of
+key/value arrayrefs if none has been provided. The callback will receive the
+key and value as arguments, and the key is also available as C<$_>.
+
+  $dict->each(sub {
+    my ($key, $value) = @_;
+    say "$key: $value";
+  });
+
+=head2 grep
+
+  my $new = $dict->grep(qr/foo/);
+  my $new = $dict->grep(sub {...});
+
+Evaluate regular expression on each key, or call callback on each key/value
+pair in the dictionary, and return a new dictionary with all pairs that matched
+the regular expression, or for which the callback returned true. The callback
+will receive the key and value as arguments, and the key is also available as
+C<$_>.
+
+  my $banana_dict = $dict->grep(qr/banana/);
+
+  my $fruits_dict = $dict->grep(sub { $_[1]->isa('Fruit') });
+
+=head2 keys
+
+  my @keys = $dict->keys;
+  $dict    = $dict->keys(sub {...});
+
+Evaluate callback for each key in the dictionary, or return all keys as a list
+if none has been provided. The key will be the first argument passed to the
+callback, and is also available as C<$_>.
+
+=head2 map
+
+  my @results = $dict->map(sub { ... });
+
+Evaluate callback for each key/value pair in the dictionary and return the
+results as a list. The callback will receive the key and value as arguments,
+and the key is also available as C<$_>.
+
+  my @pairs = $dict->map(sub { [@_] });
+
+=head2 size
+
+  my $size = $dict->size;
+
+Number of keys in dictionary.
+
+=head2 slice
+
+  my $new = $dict->slice(@keys);
+
+Create a new dictionary with all selected keys.
+
+  print join ' ', d(a => 1, b => 2, c => 3)->slice('a', 'c')->map(sub { join ':', @_ });
+  # a:1 c:3
+
+=head2 tap
+
+  $dict = $dict->tap(sub {...});
+
+Perform callback and return the dictionary object for further chaining, as in
+L<Mojo::Base/"tap">. The dictionary object will be the first argument passed to
+the callback, and is also available as C<$_>.
+
+=head2 to_array
+
+  my $array = $dict->to_array;
+
+Turn dictionary into even-sized array reference.
+
+=head2 to_hash
+
+  my $hash = $dict->to_hash;
+
+Turn dictionary into hash reference.
+
+=head2 values
+
+  my @values = $dict->values;
+  $dict      = $dict->values(sub {...});
+
+Evaluate callback for each value in the dictionary, or return all values as a
+list if none has been provided. The value will be the first argument passed to
+the callback, and is also available as C<$_>.
 
 =head1 BUGS
 
@@ -33,3 +221,4 @@ This is free software, licensed under:
 
 =head1 SEE ALSO
 
+L<Mojo::Collection>
