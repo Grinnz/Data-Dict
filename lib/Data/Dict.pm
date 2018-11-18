@@ -109,7 +109,8 @@ Data::Dict - Hash-based dictionary object
 
 =head1 DESCRIPTION
 
-L<Data::Dict> is a hash-based container for dictionaries.
+L<Data::Dict> is a hash-based container for dictionaries, with heavy
+inspiration from L<Mojo::Collection>.
 
   # Access hash directly to manipulate dictionary
   my $dict = Data::Dict->new(a => 1, b => 2, c => 3);
@@ -156,6 +157,9 @@ been provided. The callback will receive the key and value as arguments.
     my ($key, $value) = @_;
     print "$key: $value\n";
   });
+
+  # values can be modified in place
+  $dict->each(sub { $_[1] = $_[0]x2 });
 
 =head2 extract
 
@@ -244,9 +248,9 @@ Turn dictionary into hash reference.
 
   my $new = $dict->transform(sub { ... });
 
-Evaluate callback for each key/value pair in the dictionary in sorted-key order
-and create a new dictionary from the transformed keys and values. The callback
-will receive copies of the key and value as arguments.
+Evaluate callback for copies of each key/value pair in the dictionary in
+sorted-key order and create a new dictionary from the transformed keys and
+values. The callback will receive the key and value as arguments.
 
   my $doubled_values = $dict->transform(sub { $_[1]*=2 });
 
@@ -261,6 +265,9 @@ Evaluate callback for each value in the dictionary in sorted-key order, or
 return all values as a list in sorted-key order if none has been provided. The
 value will be the first argument passed to the callback, and is also available
 as C<$_>.
+
+  # values can be modified in place
+  $dict->values(sub { $_++ });
 
 =head1 BUGS
 
