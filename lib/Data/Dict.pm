@@ -20,8 +20,8 @@ sub TO_JSON { +{%{$_[0]}} }
 
 sub each {
   my ($self, $cb) = @_;
-  return map { [$_, $self->{$_}] } sort CORE::keys %$self unless $cb;
-  $cb->($_, $self->{$_}) for sort CORE::keys %$self;
+  return map { [$_, $self->{$_}] } sort keys %$self unless $cb;
+  $cb->($_, $self->{$_}) for sort keys %$self;
   return $self;
 }
 
@@ -31,19 +31,12 @@ sub grep {
   return $self->new(pairgrep { local $_ = $a; $cb->($a, $b) } %$self);
 }
 
-sub keys {
-  my ($self, $cb) = @_;
-  return sort keys %$self unless $cb;
-  $cb->($_) for sort keys %$self;
-  return $self;
-}
-
 sub map {
   my ($self, $cb) = @_;
-  return map { $cb->($_, $self->{$_}) } sort CORE::keys %$self;
+  return map { $cb->($_, $self->{$_}) } sort keys %$self;
 }
 
-sub size { scalar CORE::keys %{$_[0]} }
+sub size { scalar keys %{$_[0]} }
 
 sub slice {
   my ($self, @keys) = @_;
@@ -62,8 +55,16 @@ sub to_hash { +{%{$_[0]}} }
 
 sub values {
   my ($self, $cb) = (shift, shift);
-  return map { $self->{$_} } sort CORE::keys %$self unless $cb;
-  $_->$cb(@_) for map { $self->{$_} } sort CORE::keys %$self;
+  return map { $self->{$_} } sort keys %$self unless $cb;
+  $_->$cb(@_) for map { $self->{$_} } sort keys %$self;
+  return $self;
+}
+
+# define this last because CORE::keys doesn't work before 5.20
+sub keys {
+  my ($self, $cb) = @_;
+  return sort keys %$self unless $cb;
+  $cb->($_) for sort keys %$self;
   return $self;
 }
 
