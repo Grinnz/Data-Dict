@@ -254,9 +254,9 @@ and create a new dictionary from the returned keys and values (assumed to be an
 even-sized key/value list). The callback will receive the key and value as
 arguments.
 
-  my $doubled_values = $dict->transform(sub { ($_[0], $_[1]*2) });
+  my $reversed = $dict->transform(sub { ($_[1], $_[0]) });
 
-  my $doubled_keys = $dict->transform(sub {
+  my $doubled = $dict->transform(sub {
     my ($k, $v) = @_;
     return ($k => $v, ${k}x2 => $v);
   });
