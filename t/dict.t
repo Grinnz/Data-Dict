@@ -105,9 +105,9 @@ is_deeply $dict->slice('g'..'j')->to_hash,  {g => 7, h => 10, i => 9, j => 8}, '
 
 # transform
 $dict = d(a => 1, b => 2, c => 3);
-is_deeply $dict->transform(sub { $_[1]++ }), {a => 2, b => 3, c => 4}, 'right result';
+is_deeply $dict->transform(sub { ($_[0], $_[1]+1) }), {a => 2, b => 3, c => 4}, 'right result';
 is_deeply {%$dict}, {a => 1, b => 2, c => 3}, 'right elements';
-is_deeply $dict->transform(sub { $_[1] += 2 }), {a => 3, b => 4, c => 5}, 'right result';
+is_deeply $dict->transform(sub { my ($k, $v) = @_; ($k, $v+2) }), {a => 3, b => 4, c => 5}, 'right result';
 is_deeply {%$dict}, {a => 1, b => 2, c => 3}, 'right elements';
 
 # values

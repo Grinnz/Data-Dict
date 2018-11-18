@@ -18,7 +18,8 @@ Data::Dict - Hash-based dictionary object
   });
 
   use Data::Dict 'd';
-  my $num_highest = d(%counts)->transform(sub { $_[1]++ })->grep(sub { $_[1] > 5 })->size;
+  use experimental 'signatures';
+  my $num_highest = d(%counts)->transform(sub ($k, $v) { ($k, $v+1) })->grep(sub ($k, $v) { $v > 5 })->size;
 
 =head1 DESCRIPTION
 
@@ -161,13 +162,17 @@ Turn dictionary into hash reference.
 
   my $new = $dict->transform(sub { ... });
 
-Evaluate callback for copies of each key/value pair in the dictionary in
-sorted-key order and create a new dictionary from the transformed keys and
-values. The callback will receive the key and value as arguments.
+Evaluate callback for each key/value pair in the dictionary in sorted-key order
+and create a new dictionary from the returned keys and values (assumed to be an
+even-sized key/value list). The callback will receive the key and value as
+arguments.
 
-  my $doubled_values = $dict->transform(sub { $_[1]*=2 });
+  my $doubled_values = $dict->transform(sub { ($_[0], $_[1]*2) });
 
-  my $doubled_keys = $dict->transform(sub { $_[0].=$_[0] });
+  my $doubled_keys = $dict->transform(sub {
+    my ($k, $v) = @_;
+    return ($k => $v, ${k}x2 => $v);
+  });
 
 =head2 values
 
