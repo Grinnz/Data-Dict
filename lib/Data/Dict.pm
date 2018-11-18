@@ -2,7 +2,10 @@ package Data::Dict;
 
 use strict;
 use warnings;
+use Carp ();
 use Exporter 'import';
+
+use constant HAS_COLLECTION => !!eval { require Mojo::Collection; 1 };
 
 our $VERSION = '0.001';
 
@@ -31,6 +34,13 @@ sub each {
   return $self;
 }
 
+sub each_c {
+  Carp::croak 'Mojo::Collection is required for each_c' unless HAS_COLLECTION;
+  my $self = shift;
+  return Mojo::Collection->new(map { Mojo::Collection->new(@$_) } $self->each) unless @_;
+  return $self->each(@_);
+}
+
 sub extract {
   my ($self, $cb) = @_;
   return $self->delete(grep { m/$cb/ } sort keys %$self) if ref $cb eq 'Regexp';
@@ -46,6 +56,12 @@ sub grep {
 sub map {
   my ($self, $cb) = @_;
   return map { $cb->($_, $self->{$_}) } sort keys %$self;
+}
+
+sub map_c {
+  Carp::croak 'Mojo::Collection is required for map_c' unless HAS_COLLECTION;
+  my $self = shift;
+  return Mojo::Collection->new($self->map(@_));
 }
 
 sub size { scalar keys %{$_[0]} }
@@ -77,12 +93,26 @@ sub values {
   return $self;
 }
 
+sub values_c {
+  Carp::croak 'Mojo::Collection is required for values_c' unless HAS_COLLECTION;
+  my $self = shift;
+  return Mojo::Collection->new($self->values) unless @_;
+  return $self->values(@_);
+}
+
 # define this last because CORE::keys doesn't work before 5.20
 sub keys {
   my ($self, $cb) = @_;
   return wantarray ? sort keys %$self : keys %$self unless $cb;
   $cb->($_) for sort keys %$self;
   return $self;
+}
+
+sub keys_c {
+  Carp::croak 'Mojo::Collection is required for keys_c' unless HAS_COLLECTION;
+  my $self = shift;
+  return Mojo::Collection->new($self->keys) unless @_;
+  return $self->keys(@_);
 }
 
 1;
@@ -95,18 +125,24 @@ Data::Dict - Hash-based dictionary object
 
   use Data::Dict;
 
+  # Manipulate dictionary
   my $dictionary = Data::Dict->new(a => 1, b => 2, c => 3);
   delete $dictionary->{b};
   print join "\n", $dictionary->keys;
 
+  # Chain methods
   $dictionary->slice(qw(a b))->grep(sub { defined $_[1] })->each(sub {
     my ($key, $value) = @_;
     print "$key: $value\n";
   });
 
+  # Use the alternative constructor
   use Data::Dict 'd';
   use experimental 'signatures';
   my $num_highest = d(%counts)->transform(sub ($k, $v) { ($k, $v+1) })->grep(sub ($k, $v) { $v > 5 })->size;
+
+  # Use Mojo::Collection for more chaining
+  d(%hash)->map_c(sub { join ':', @_ })->shuffle->join("\n")->say;
 
 =head1 DESCRIPTION
 
@@ -162,6 +198,16 @@ been provided. The callback will receive the key and value as arguments.
   # values can be modified in place
   $dict->each(sub { $_[1] = $_[0]x2 });
 
+=head2 each_c
+
+  my $collection = $dict->each_c;
+
+Create a new collection of key/value pairs as collections in sorted-key order.
+Requires L<Mojo::Collection>.
+
+  # print all keys and values
+  print $dict->each_c->flatten->join(' ');
+
 =head2 extract
 
   my $extracted = $dict->extract(qr/foo/);
@@ -198,9 +244,17 @@ Evaluate callback for each key in the dictionary in sorted-key order, or return
 all keys as a sorted list if none has been provided. The key will be the first
 argument passed to the callback, and is also available as C<$_>.
 
+=head2 keys_c
+
+  my $collection = $dict->keys_c;
+
+Create a new collection from sorted keys. Requires L<Mojo::Collection>.
+
+  my $first_key = $dict->keys_c->first;
+
 =head2 map
 
-  my @results = $dict->map(sub { ... });
+  my @results = $dict->map(sub {...});
 
 Evaluate callback for each key/value pair in the dictionary in sorted-key order
 and return the results as a list. The callback will receive the key and value
@@ -209,6 +263,16 @@ as arguments.
   my @pairs = $dict->map(sub { [@_] });
 
   my @values = $dict->map(sub { $_[1] });
+
+=head2 map_c
+
+  my $collection = $dict->map_c(sub {...});
+
+Evaluate callback for each key/value pair in the dictionary in sorted-key order
+and create a new collection from the results. The callback will receive the key
+and value as arguments. Requires L<Mojo::Collection>.
+
+  my $output = $dict->map_c(sub { "$_[0]: $_[1]" })->join("\n");
 
 =head2 size
 
@@ -247,7 +311,7 @@ Turn dictionary into hash reference.
 
 =head2 transform
 
-  my $new = $dict->transform(sub { ... });
+  my $new = $dict->transform(sub {...});
 
 Evaluate callback for each key/value pair in the dictionary in sorted-key order
 and create a new dictionary from the returned keys and values (assumed to be an
@@ -273,6 +337,15 @@ as C<$_>.
 
   # values can be modified in place
   $dict->values(sub { $_++ });
+
+=head2 values_c
+
+  my $collection = $dict->values_c;
+
+Create a new collection from all values in sorted-key order. Requires
+L<Mojo::Collection>.
+
+  my @shuffled_values = $dict->values_c->shuffle->each;
 
 =head1 BUGS
 

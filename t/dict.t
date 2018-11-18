@@ -1,7 +1,7 @@
 use strict;
 use warnings;
-use Data::Dict 'd';
 use Test::More;
+use Data::Dict 'd';
 
 # Hash
 is d(a => 1, b => 2, c => 3)->{b}, 2, 'right result';
