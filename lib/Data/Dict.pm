@@ -17,11 +17,24 @@ sub new {
 
 sub TO_JSON { +{%{$_[0]}} }
 
+sub delete {
+  my $self = shift;
+  my $deleted = $self->slice(@_);
+  delete @$self{keys %$deleted} if keys %$deleted;
+  return $deleted;
+}
+
 sub each {
   my ($self, $cb) = @_;
   return map { [$_, $self->{$_}] } sort keys %$self unless $cb;
   $cb->($_, $self->{$_}) for sort keys %$self;
   return $self;
+}
+
+sub extract {
+  my ($self, $cb) = @_;
+  return $self->delete(grep { m/$cb/ } sort keys %$self) if ref $cb eq 'Regexp';
+  return $self->delete(grep { $cb->($_, $self->{$_}) } sort keys %$self);
 }
 
 sub grep {
@@ -67,7 +80,7 @@ sub values {
 # define this last because CORE::keys doesn't work before 5.20
 sub keys {
   my ($self, $cb) = @_;
-  return sort keys %$self unless $cb;
+  return wantarray ? sort keys %$self : keys %$self unless $cb;
   $cb->($_) for sort keys %$self;
   return $self;
 }
@@ -123,6 +136,13 @@ Construct a new hash-based L<Data::Dict> object.
 
 Alias for L</"to_hash">.
 
+=head2 delete
+
+  my $deleted = $dict->delete(@keys);
+
+Delete selected keys from the dictionary and return a new dictionary containing
+the deleted keys and values.
+
 =head2 each
 
   my @pairs = $dict->each;
@@ -136,6 +156,19 @@ been provided. The callback will receive the key and value as arguments.
     my ($key, $value) = @_;
     print "$key: $value\n";
   });
+
+=head2 extract
+
+  my $extracted = $dict->extract(qr/foo/);
+  my $extracted = $dict->extract(sub {...});
+
+Evaluate regular expression on each key, or call callback on each key/value
+pair in the dictionary in sorted-key order, and remove all pairs that matched
+the regular expression, or for which the callback returned true. Return a new
+dictionary with the removed keys and values. The callback will receive the key
+and value as arguments.
+
+  my $high_numbers = $dict->extract(sub { $_[1] > 100 });
 
 =head2 grep
 
