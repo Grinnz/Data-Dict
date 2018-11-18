@@ -21,14 +21,14 @@ my @results;
 $dict->each(sub { push @results, $_[1][0] });
 is_deeply \@results, [3, 2, 1], 'right elements';
 @results = ();
-$dict->each(sub { push @results, shift, shift->[0] });
+$dict->each(sub { push @results, $_[0], $_[1][0] });
 is_deeply \@results, ['a', 3, 'b', 2, 'c', 1], 'right elements';
 
 # grep
 $dict = d(a => 1, b => 2, c => 3, d => 4, e => 5, f => 6, g => 7, h => 8, i => 9);
 is_deeply $dict->grep(qr/[f-i]/)->to_hash, {f => 6, g => 7, h => 8, i => 9},
   'right elements';
-is_deeply $dict->grep(sub {/[f-i]/})->to_hash, {f => 6, g => 7, h => 8, i => 9},
+is_deeply $dict->grep(sub { $_[0] =~ m/[f-i]/ })->to_hash, {f => 6, g => 7, h => 8, i => 9},
   'right elements';
 is_deeply $dict->grep(sub { $_[1] > 5 })->to_hash, {f => 6, g => 7, h => 8, i => 9},
   'right elements';
@@ -69,5 +69,12 @@ is_deeply $dict->slice('z')->to_hash,       {z => undef}, 'right result';
 is_deeply $dict->slice(qw(b c d))->to_hash, {b => 2, c => 3, d => 4}, 'right result';
 is_deeply $dict->slice(qw(g b e))->to_hash, {g => 7, b => 2, e => 5}, 'right result';
 is_deeply $dict->slice('g'..'j')->to_hash,  {g => 7, h => 10, i => 9, j => 8}, 'right result';
+
+# transform
+$dict = d(a => 1, b => 2, c => 3);
+is_deeply $dict->transform(sub { $_[1]++ }), {a => 2, b => 3, c => 4}, 'right result';
+is_deeply {%$dict}, {a => 1, b => 2, c => 3}, 'right elements';
+is_deeply $dict->transform(sub { $_[1] += 2 }), {a => 3, b => 4, c => 5}, 'right result';
+is_deeply {%$dict}, {a => 1, b => 2, c => 3}, 'right elements';
 
 done_testing;

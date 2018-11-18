@@ -26,8 +26,8 @@ sub each {
 
 sub grep {
   my ($self, $cb) = @_;
-  return $self->new(map { ($_ => $self->{$_}) } grep { m/$cb/ } sort keys %$self) if ref $cb eq 'Regexp';
-  return $self->new(map { ($_ => $self->{$_}) } grep { $cb->($_, $self->{$_}) } sort keys %$self);
+  return $self->new(map { ($_, $self->{$_}) } grep { m/$cb/ } sort keys %$self) if ref $cb eq 'Regexp';
+  return $self->new(map { ($_, $self->{$_}) } grep { $cb->($_, $self->{$_}) } sort keys %$self);
 }
 
 sub map {
@@ -39,7 +39,7 @@ sub size { scalar keys %{$_[0]} }
 
 sub slice {
   my $self = shift;
-  return $self->new(map { ($_ => $self->{$_}) } @_);
+  return $self->new(map { ($_, $self->{$_}) } @_);
 }
 
 sub tap {
@@ -52,10 +52,15 @@ sub to_array { [%{$_[0]}] }
 
 sub to_hash { +{%{$_[0]}} }
 
+sub transform {
+  my ($self, $cb) = @_;
+  return $self->new(map { $cb->(my $k = $_, my $v = $self->{$_}); ($k, $v) } sort keys %$self);
+}
+
 sub values {
   my ($self, $cb) = (shift, shift);
   return map { $self->{$_} } sort keys %$self unless $cb;
-  $_->$cb(@_) for map { $self->{$_} } sort keys %$self;
+  do { $_->$cb(@_) for $self->{$_} } for sort keys %$self;
   return $self;
 }
 
@@ -79,11 +84,11 @@ Data::Dict - Hash-based dictionary object
 
   my $dictionary = Data::Dict->new(a => 1, b => 2, c => 3);
   delete $dictionary->{b};
-  say join "\n", $dictionary->keys;
+  print join "\n", $dictionary->keys;
 
-  $dictionary->slice(qw(a b))->grep(sub { defined $_[1] })->each(sub {
+  $dictionary->slice(qw(a b))->grep(sub { defined $_->[1] })->each(sub {
     my ($key, $value) = @_;
-    say "$key: $value";
+    print "$key: $value\n";
   });
 
   use Data::Dict 'd';
@@ -96,7 +101,7 @@ L<Data::Dict> is a hash-based container for dictionaries.
   # Access hash directly to manipulate dictionary
   my $dict = Data::Dict->new(a => 1, b => 2, c => 3);
   $dict->{b} += 100;
-  say for values %$dict;
+  print "$_\n" for values %$dict;
 
 =head1 FUNCTIONS
 
@@ -125,12 +130,11 @@ Alias for L</"to_hash">.
 
 Evaluate callback for each pair in the dictionary in sorted-key order, or
 return pairs as list of key/value arrayrefs in sorted-key order if none has
-been provided. The callback will receive the key and value as arguments, and
-the key is also available as C<$_>.
+been provided. The callback will receive the key and value as arguments.
 
   $dict->each(sub {
     my ($key, $value) = @_;
-    say "$key: $value";
+    print "$key: $value\n";
   });
 
 =head2 grep
@@ -141,8 +145,7 @@ the key is also available as C<$_>.
 Evaluate regular expression on each key, or call callback on each key/value
 pair in the dictionary in sorted-key order, and return a new dictionary with
 all pairs that matched the regular expression, or for which the callback
-returned true. The callback will receive the key and value as arguments, and
-the key is also available as C<$_>.
+returned true. The callback will receive the key and value as arguments.
 
   my $banana_dict = $dict->grep(qr/banana/);
 
@@ -163,9 +166,11 @@ argument passed to the callback, and is also available as C<$_>.
 
 Evaluate callback for each key/value pair in the dictionary in sorted-key order
 and return the results as a list. The callback will receive the key and value
-as arguments, and the key is also available as C<$_>.
+as arguments.
 
   my @pairs = $dict->map(sub { [@_] });
+
+  my @values = $dict->map(sub { $_[1] });
 
 =head2 size
 
@@ -201,6 +206,18 @@ Turn dictionary into even-sized array reference in sorted-key order.
   my $hash = $dict->to_hash;
 
 Turn dictionary into hash reference.
+
+=head2 transform
+
+  my $new = $dict->transform(sub { ... });
+
+Evaluate callback for each key/value pair in the dictionary in sorted-key order
+and create a new dictionary from the transformed keys and values. The callback
+will receive copies of the key and value as arguments.
+
+  my $doubled_values = $dict->transform(sub { $_[1]*=2 });
+
+  my $doubled_keys = $dict->transform(sub { $_[0].=$_[0] });
 
 =head2 values
 
