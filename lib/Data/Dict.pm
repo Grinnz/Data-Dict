@@ -38,8 +38,8 @@ sub map {
 sub size { scalar keys %{$_[0]} }
 
 sub slice {
-  my ($self, @keys) = @_;
-  return $self->new(map { ($_ => $self->{$_}) } @keys);
+  my $self = shift;
+  return $self->new(map { ($_ => $self->{$_}) } @_);
 }
 
 sub tap {
