@@ -22,13 +22,20 @@ Data::Dict - Hash-based dictionary object
 
 =head1 DESCRIPTION
 
+L<Data::Dict> is a hash-based container for dictionaries.
+
+  # Access hash directly to manipulate dictionary
+  my $dict = Data::Dict->new(a => 1, b => 2, c => 3);
+  $dict->{b} += 100;
+  say for values %$dict;
+
 =head1 FUNCTIONS
 
 =head2 d
 
   my $dict = d(a => 1, b => 2);
 
-Construct a new hash-based L<Data::Dict> object. Imported on demand.
+Construct a new hash-based L<Data::Dict> object. Exported on demand.
 
 =head1 METHODS
 
