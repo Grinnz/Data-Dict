@@ -39,6 +39,7 @@
       },
       "runtime" : {
          "requires" : {
+            "Carp" : "0",
             "Exporter" : "5.57",
             "perl" : "5.008001"
          }
@@ -59,7 +60,7 @@
    "provides" : {
       "Data::Dict" : {
          "file" : "lib/Data/Dict.pm",
-         "version" : "0.002"
+         "version" : "0.003"
       }
    },
    "release_status" : "stable",
@@ -74,7 +75,7 @@
          "web" : "https://github.com/Grinnz/Data-Dict"
       }
    },
-   "version" : "0.002",
+   "version" : "0.003",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.028000"
@@ -263,7 +264,7 @@
                   "branch" : null,
                   "changelog" : "Changes",
                   "signed" : 0,
-                  "tag" : "0.002",
+                  "tag" : "0.003",
                   "tag_format" : "%v",
                   "tag_message" : "%v"
                },
