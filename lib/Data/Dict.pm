@@ -7,7 +7,7 @@ use Exporter 'import';
 
 use constant HAS_COLLECTION => !!eval { require Mojo::Collection; 1 };
 
-our $VERSION = '0.002';
+our $VERSION = '0.003';
 
 our @EXPORT_OK = 'd';
 
