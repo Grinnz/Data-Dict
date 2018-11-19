@@ -10,6 +10,18 @@ my $dict = d(a => 1, b => 2);
 $dict->{c} = 3;
 is_deeply {%$dict}, {a => 1, b => 2, c => 3}, 'right result';
 
+# to_array
+$dict = d(a => 3, b => 2, c => 3);
+my @keys = keys %$dict;
+my @values = values %$dict;
+is_deeply $dict->to_array, [$keys[0], $values[0], $keys[1], $values[1], $keys[2], $values[2]], 'right elements';
+
+# to_array_sorted
+$dict = d(a => 3, b => 2, c => 3);
+@keys = sort keys %$dict;
+@values = @$dict{sort keys %$dict};
+is_deeply $dict->to_array_sorted, [$keys[0], $values[0], $keys[1], $values[1], $keys[2], $values[2]], 'right elements';
+
 # Tap into method chain
 is_deeply d(a => 1, b => 2, c => 3)->tap(sub { $_->{b} += 2 })->to_hash, {a => 1, b => 4, c => 3}, 'right result';
 
@@ -25,14 +37,33 @@ is_deeply {%$dict}, {e => 5}, 'right result';
 
 # each
 $dict = d(a => 3, b => 2, c => 1);
-is_deeply [$dict->each], [['a',3], ['b',2], ['c',1]], 'right elements';
+@keys = keys %$dict;
+@values = values %$dict;
+is_deeply [$dict->each], [[$keys[0], $values[0]], [$keys[1], $values[1]], [$keys[2], $values[2]]], 'right elements';
 $dict = d(a => [3], b => [2], c => [1]);
+@keys = keys %$dict;
+@values = values %$dict;
 my @results;
 $dict->each(sub { push @results, $_[1][0] });
-is_deeply \@results, [3, 2, 1], 'right elements';
+is_deeply \@results, [$values[0][0], $values[1][0], $values[2][0]], 'right elements';
 @results = ();
 $dict->each(sub { push @results, $_[0], $_[1][0] });
-is_deeply \@results, ['a', 3, 'b', 2, 'c', 1], 'right elements';
+is_deeply \@results, [$keys[0], $values[0][0], $keys[1], $values[1][0], $keys[2], $values[2][0]], 'right elements';
+
+# each_sorted
+$dict = d(a => 3, b => 2, c => 1);
+@keys = sort keys %$dict;
+@values = @$dict{sort keys %$dict};
+is_deeply [$dict->each_sorted], [[$keys[0], $values[0]], [$keys[1], $values[1]], [$keys[2], $values[2]]], 'right elements';
+$dict = d(a => [3], b => [2], c => [1]);
+@keys = sort keys %$dict;
+@values = @$dict{sort keys %$dict};
+@results = ();
+$dict->each_sorted(sub { push @results, $_[1][0] });
+is_deeply \@results, [$values[0][0], $values[1][0], $values[2][0]], 'right elements';
+@results = ();
+$dict->each_sorted(sub { push @results, $_[0], $_[1][0] });
+is_deeply \@results, [$keys[0], $values[0][0], $keys[1], $values[1][0], $keys[2], $values[2][0]], 'right elements';
 
 # extract
 $dict = d(a => 1, b => 2, c => 3, d => 4, e => 5, f => 6, g => 7, h => 8, i => 9);
@@ -66,17 +97,27 @@ $dict = d();
 is $dict->keys, 0, 'no keys';
 is_deeply [$dict->keys], [], 'no keys';
 $dict = d(a => 3, b => 2, c => 1);
+@keys = keys %$dict;
 is $dict->keys, 3, 'right number of keys';
-is_deeply [$dict->keys], [qw(a b c)], 'right keys';
+is_deeply [$dict->keys], \@keys, 'right keys';
 @results = ();
 $dict->keys(sub { push @results, $_ });
-is_deeply \@results, [qw(a b c)], 'right keys';
+is_deeply \@results, \@keys, 'right keys';
 
 # map
 $dict = d(a => 1, b => 2, c => 3);
-is join('', $dict->map(sub { $_[1] + 1 })), '234', 'right result';
+@values = values %$dict;
+is join('', $dict->map(sub { $_[1] + 1 })), join('', map { $_ + 1 } @values), 'right result';
 is_deeply {%$dict}, {a => 1, b => 2, c => 3}, 'right elements';
-is join('', $dict->map(sub { my $v = $_[1]; $v + 2 })), '345', 'right result';
+is join('', $dict->map(sub { my $v = $_[1]; $v + 2 })), join('', map { $_ + 2 } @values), 'right result';
+is_deeply {%$dict}, {a => 1, b => 2, c => 3}, 'right elements';
+
+# map_sorted
+$dict = d(a => 1, b => 2, c => 3);
+@values = @$dict{sort keys %$dict};
+is join('', $dict->map_sorted(sub { $_[1] + 1 })), join('', map { $_ + 1 } @values), 'right result';
+is_deeply {%$dict}, {a => 1, b => 2, c => 3}, 'right elements';
+is join('', $dict->map_sorted(sub { my $v = $_[1]; $v + 2 })), join('', map { $_ + 2 } @values), 'right result';
 is_deeply {%$dict}, {a => 1, b => 2, c => 3}, 'right elements';
 
 # size
@@ -115,11 +156,12 @@ $dict = d();
 is $dict->values, 0, 'no values';
 is_deeply [$dict->values], [], 'no values';
 $dict = d(a => 3, b => 2, c => 1);
+@values = values %$dict;
 is $dict->values, 3, 'right number of values';
-is_deeply [$dict->values], [qw(3 2 1)], 'right values';
+is_deeply [$dict->values], \@values, 'right values';
 @results = ();
 $dict->values(sub { push @results, $_++ });
-is_deeply \@results, [qw(3 2 1)], 'right values';
+is_deeply \@results, \@values, 'right values';
 is_deeply {%$dict}, {a => 4, b => 3, c => 2}, 'right elements';
 
 done_testing;
