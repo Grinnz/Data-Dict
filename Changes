@@ -1,4 +1,6 @@
 {{$NEXT}}
+  - Added Carp dependency
+  - Avoid loading Mojo::Collection until it's needed
 
 0.002     2018-11-18 20:37:38 EST
   - Quick incompatible change: methods now operate in default keys order for efficiency unless otherwise noted.
