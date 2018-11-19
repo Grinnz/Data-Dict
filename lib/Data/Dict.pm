@@ -88,8 +88,8 @@ sub transform {
 
 sub values {
   my ($self, $cb) = (shift, shift);
-  return map { $self->{$_} } sort keys %$self unless $cb;
-  do { $_->$cb(@_) for $self->{$_} } for sort keys %$self;
+  return wantarray ? @$self{sort keys %$self} : values %$self unless $cb;
+  $_->$cb(@_) for @$self{sort keys %$self};
   return $self;
 }
 
