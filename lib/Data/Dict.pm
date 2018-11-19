@@ -10,6 +10,10 @@ our $VERSION = '0.003';
 our @EXPORT_OK = 'd';
 
 my $MC;
+sub _load_mc {
+  local $@;
+  return $MC = !!eval { require Mojo::Collection; 1 };
+}
 
 sub d { __PACKAGE__->new(@_) }
 
@@ -35,8 +39,7 @@ sub each {
 }
 
 sub each_c {
-  Carp::croak 'Mojo::Collection is required for each_c'
-    unless defined $MC ? $MC : ($MC = !!eval { require Mojo::Collection; 1 });
+  Carp::croak 'Mojo::Collection is required for each_c' unless defined $MC ? $MC : _load_mc;
   my $self = shift;
   return Mojo::Collection->new(map { Mojo::Collection->new(@$_) } $self->each);
 }
@@ -49,8 +52,7 @@ sub each_sorted {
 }
 
 sub each_sorted_c {
-  Carp::croak 'Mojo::Collection is required for each_sorted_c'
-    unless defined $MC ? $MC : ($MC = !!eval { require Mojo::Collection; 1 });
+  Carp::croak 'Mojo::Collection is required for each_sorted_c' unless defined $MC ? $MC : _load_mc;
   my $self = shift;
   return Mojo::Collection->new(map { Mojo::Collection->new(@$_) } $self->each_sorted);
 }
@@ -73,8 +75,7 @@ sub map {
 }
 
 sub map_c {
-  Carp::croak 'Mojo::Collection is required for map_c'
-    unless defined $MC ? $MC : ($MC = !!eval { require Mojo::Collection; 1 });
+  Carp::croak 'Mojo::Collection is required for map_c' unless defined $MC ? $MC : _load_mc;
   my $self = shift;
   return Mojo::Collection->new($self->map(@_));
 }
@@ -85,8 +86,7 @@ sub map_sorted {
 }
 
 sub map_sorted_c {
-  Carp::croak 'Mojo::Collection is required for map_sorted_c'
-    unless defined $MC ? $MC : ($MC = !!eval { require Mojo::Collection; 1 });
+  Carp::croak 'Mojo::Collection is required for map_sorted_c' unless defined $MC ? $MC : _load_mc;
   my $self = shift;
   return Mojo::Collection->new($self->map_sorted(@_));
 }
@@ -105,14 +105,12 @@ sub tap {
 }
 
 sub to_collection {
-  Carp::croak 'Mojo::Collection is required for to_collection'
-    unless defined $MC ? $MC : ($MC = !!eval { require Mojo::Collection; 1 });
+  Carp::croak 'Mojo::Collection is required for to_collection' unless defined $MC ? $MC : _load_mc;
   return Mojo::Collection->new(%{$_[0]});
 }
 
 sub to_collection_sorted {
-  Carp::croak 'Mojo::Collection is required for to_collection_sorted'
-    unless defined $MC ? $MC : ($MC = !!eval { require Mojo::Collection; 1 });
+  Carp::croak 'Mojo::Collection is required for to_collection_sorted' unless defined $MC ? $MC : _load_mc;
   my $self = shift;
   return Mojo::Collection->new(map { ($_, $self->{$_}) } sort keys %$self);
 }
@@ -132,8 +130,7 @@ sub values {
 }
 
 sub values_c {
-  Carp::croak 'Mojo::Collection is required for values_c'
-    unless defined $MC ? $MC : ($MC = !!eval { require Mojo::Collection; 1 });
+  Carp::croak 'Mojo::Collection is required for values_c' unless defined $MC ? $MC : _load_mc;
   my $self = shift;
   return Mojo::Collection->new($self->values);
 }
@@ -147,8 +144,7 @@ sub keys {
 }
 
 sub keys_c {
-  Carp::croak 'Mojo::Collection is required for keys_c'
-    unless defined $MC ? $MC : ($MC = !!eval { require Mojo::Collection; 1 });
+  Carp::croak 'Mojo::Collection is required for keys_c' unless defined $MC ? $MC : _load_mc;
   my $self = shift;
   return Mojo::Collection->new($self->keys);
 }
