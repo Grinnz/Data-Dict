@@ -25,8 +25,8 @@ is_deeply {%$dict}, {e => 5}, 'right result';
 
 # each
 $dict = d(a => 3, b => 2, c => 1);
-@keys = keys %$dict;
-@values = values %$dict;
+my @keys = keys %$dict;
+my @values = values %$dict;
 is_deeply [$dict->each], [[$keys[0], $values[0]], [$keys[1], $values[1]], [$keys[2], $values[2]]], 'right elements';
 $dict = d(a => [3], b => [2], c => [1]);
 @keys = keys %$dict;
