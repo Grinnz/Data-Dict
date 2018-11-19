@@ -26,76 +26,91 @@ sub TO_JSON { +{%{$_[0]}} }
 
 sub delete {
   my $self = shift;
-  my $deleted = $self->slice(@_);
-  delete @$self{keys %$deleted} if keys %$deleted;
-  return $deleted;
+  my @values = CORE::delete @$self{@_};
+  return $self->new(CORE::map { ($_[$_], $values[$_]) } 0..$#_);
 }
 
 sub each {
   my ($self, $cb) = @_;
-  return map { [$_, $self->{$_}] } keys %$self unless $cb;
-  $cb->($_, $self->{$_}) for keys %$self;
+  return CORE::map { [$_, $self->{$_}] } CORE::keys %$self unless $cb;
+  $cb->($_, $self->{$_}) for CORE::keys %$self;
   return $self;
 }
 
 sub each_c {
   Carp::croak 'Mojo::Collection is required for each_c' unless defined $MC ? $MC : _load_mc;
   my $self = shift;
-  return Mojo::Collection->new(map { Mojo::Collection->new(@$_) } $self->each);
+  return Mojo::Collection->new(CORE::map { Mojo::Collection->new($_, $self->{$_}) } CORE::keys %$self);
 }
 
 sub each_sorted {
   my ($self, $cb) = @_;
-  return map { [$_, $self->{$_}] } sort keys %$self unless $cb;
-  $cb->($_, $self->{$_}) for sort keys %$self;
+  return CORE::map { [$_, $self->{$_}] } sort +CORE::keys %$self unless $cb;
+  $cb->($_, $self->{$_}) for sort +CORE::keys %$self;
   return $self;
 }
 
 sub each_sorted_c {
   Carp::croak 'Mojo::Collection is required for each_sorted_c' unless defined $MC ? $MC : _load_mc;
   my $self = shift;
-  return Mojo::Collection->new(map { Mojo::Collection->new(@$_) } $self->each_sorted);
+  return Mojo::Collection->new(CORE::map { Mojo::Collection->new($_, $self->{$_}) } sort +CORE::keys %$self);
 }
 
 sub extract {
   my ($self, $cb) = @_;
-  return $self->delete(grep { m/$cb/ } keys %$self) if ref $cb eq 'Regexp';
-  return $self->delete(grep { $cb->($_, $self->{$_}) } keys %$self);
+  my @keys = ref $cb eq 'Regexp'
+    ? CORE::grep { m/$cb/ } CORE::keys %$self
+    : CORE::grep { $cb->($_, $self->{$_}) } CORE::keys %$self;
+  my @values = CORE::delete @$self{@keys};
+  return $self->new(CORE::map { ($keys[$_], $values[$_]) } 0..$#keys);
 }
 
 sub grep {
   my ($self, $cb) = @_;
-  return $self->new(map { ($_, $self->{$_}) } grep { m/$cb/ } keys %$self) if ref $cb eq 'Regexp';
-  return $self->new(map { ($_, $self->{$_}) } grep { $cb->($_, $self->{$_}) } keys %$self);
+  return $self->new(CORE::map { ($_, $self->{$_}) } CORE::grep { m/$cb/ } CORE::keys %$self) if ref $cb eq 'Regexp';
+  return $self->new(CORE::map { ($_, $self->{$_}) } CORE::grep { $cb->($_, $self->{$_}) } CORE::keys %$self);
+}
+
+sub keys {
+  my ($self, $cb) = @_;
+  return CORE::keys %$self unless $cb;
+  $cb->($_) for CORE::keys %$self;
+  return $self;
+}
+
+sub keys_c {
+  Carp::croak 'Mojo::Collection is required for keys_c' unless defined $MC ? $MC : _load_mc;
+  my $self = shift;
+  return Mojo::Collection->new(CORE::keys %$self);
 }
 
 sub map {
   my ($self, $cb) = @_;
-  return map { $cb->($_, $self->{$_}) } keys %$self;
+  return CORE::map { $cb->($_, $self->{$_}) } CORE::keys %$self;
 }
 
 sub map_c {
   Carp::croak 'Mojo::Collection is required for map_c' unless defined $MC ? $MC : _load_mc;
-  my $self = shift;
-  return Mojo::Collection->new($self->map(@_));
+  my ($self, $cb) = @_;
+  return Mojo::Collection->new(CORE::map { $cb->($_, $self->{$_}) } CORE::keys %$self);
 }
 
 sub map_sorted {
   my ($self, $cb) = @_;
-  return map { $cb->($_, $self->{$_}) } sort keys %$self;
+  return CORE::map { $cb->($_, $self->{$_}) } sort +CORE::keys %$self;
 }
 
 sub map_sorted_c {
   Carp::croak 'Mojo::Collection is required for map_sorted_c' unless defined $MC ? $MC : _load_mc;
-  my $self = shift;
-  return Mojo::Collection->new($self->map_sorted(@_));
+  my ($self, $cb) = @_;
+  return Mojo::Collection->new(CORE::map { $cb->($_, $self->{$_}) } sort +CORE::keys %$self);
 }
 
-sub size { scalar keys %{$_[0]} }
+sub size { scalar CORE::keys %{$_[0]} }
 
 sub slice {
   my $self = shift;
-  return $self->new(map { ($_, $self->{$_}) } @_);
+  return $self->new(CORE::map { ($_, $self->{$_}) } @_);
 }
 
 sub tap {
@@ -112,41 +127,27 @@ sub to_collection {
 sub to_collection_sorted {
   Carp::croak 'Mojo::Collection is required for to_collection_sorted' unless defined $MC ? $MC : _load_mc;
   my $self = shift;
-  return Mojo::Collection->new(map { ($_, $self->{$_}) } sort keys %$self);
+  return Mojo::Collection->new(CORE::map { ($_, $self->{$_}) } sort +CORE::keys %$self);
 }
 
 sub to_hash { +{%{$_[0]}} }
 
 sub transform {
   my ($self, $cb) = @_;
-  return $self->new(map { $cb->($_, $self->{$_}) } keys %$self);
+  return $self->new(CORE::map { $cb->($_, $self->{$_}) } CORE::keys %$self);
 }
 
 sub values {
   my ($self, $cb) = (shift, shift);
-  return values %$self unless $cb;
-  $_->$cb(@_) for values %$self;
+  return CORE::values %$self unless $cb;
+  $_->$cb(@_) for CORE::values %$self;
   return $self;
 }
 
 sub values_c {
   Carp::croak 'Mojo::Collection is required for values_c' unless defined $MC ? $MC : _load_mc;
   my $self = shift;
-  return Mojo::Collection->new($self->values);
-}
-
-# define this last because CORE::keys doesn't work before 5.20
-sub keys {
-  my ($self, $cb) = @_;
-  return keys %$self unless $cb;
-  $cb->($_) for keys %$self;
-  return $self;
-}
-
-sub keys_c {
-  Carp::croak 'Mojo::Collection is required for keys_c' unless defined $MC ? $MC : _load_mc;
-  my $self = shift;
-  return Mojo::Collection->new($self->keys);
+  return Mojo::Collection->new(CORE::values %$self);
 }
 
 1;
