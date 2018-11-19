@@ -100,13 +100,6 @@ sub tap {
   return $self;
 }
 
-sub to_array { [%{$_[0]}] }
-
-sub to_array_sorted {
-  my $self = shift;
-  return [map { ($_, $self->{$_}) } sort keys %$self];
-}
-
 sub to_collection {
   Carp::croak 'Mojo::Collection is required for to_collection' unless HAS_COLLECTION;
   return Mojo::Collection->new(%{$_[0]});
@@ -114,7 +107,8 @@ sub to_collection {
 
 sub to_collection_sorted {
   Carp::croak 'Mojo::Collection is required for to_collection_sorted' unless HAS_COLLECTION;
-  return Mojo::Collection->new(@{shift->to_array_sorted});
+  my $self = shift;
+  return Mojo::Collection->new(map { ($_, $self->{$_}) } sort keys %$self);
 }
 
 sub to_hash { +{%{$_[0]}} }
@@ -362,30 +356,19 @@ Perform callback and return the dictionary object for further chaining, as in
 L<Mojo::Base/"tap">. The dictionary object will be the first argument passed to
 the callback, and is also available as C<$_>.
 
-=head2 to_array
-
-  my $array = $dict->to_array;
-
-Turn dictionary into even-sized array reference.
-
-=head2 to_array_sorted
-
-  my $array = $dict->to_array_sorted;
-
-Turn dictionary into even-sized array reference in sorted keys order.
-
 =head2 to_collection
 
   my $collection = $dict->to_collection;
 
-Turn dictionary into even-sized collection. Requires L<Mojo::Collection>.
+Turn dictionary into even-sized collection of keys and values. Requires
+L<Mojo::Collection>.
 
 =head2 to_collection_sorted
 
   my $collection = $dict->to_collection_sorted;
 
-Turn dictionary into even-sized collection in sorted keys order. Requires
-L<Mojo::Collection>.
+Turn dictionary into even-sized collection of keys and values in sorted keys
+order. Requires L<Mojo::Collection>.
 
 =head2 to_hash
 

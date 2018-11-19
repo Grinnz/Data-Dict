@@ -10,18 +10,6 @@ my $dict = d(a => 1, b => 2);
 $dict->{c} = 3;
 is_deeply {%$dict}, {a => 1, b => 2, c => 3}, 'right result';
 
-# to_array
-$dict = d(a => 3, b => 2, c => 3);
-my @keys = keys %$dict;
-my @values = values %$dict;
-is_deeply $dict->to_array, [$keys[0], $values[0], $keys[1], $values[1], $keys[2], $values[2]], 'right elements';
-
-# to_array_sorted
-$dict = d(a => 3, b => 2, c => 3);
-@keys = sort keys %$dict;
-@values = @$dict{sort keys %$dict};
-is_deeply $dict->to_array_sorted, [$keys[0], $values[0], $keys[1], $values[1], $keys[2], $values[2]], 'right elements';
-
 # Tap into method chain
 is_deeply d(a => 1, b => 2, c => 3)->tap(sub { $_->{b} += 2 })->to_hash, {a => 1, b => 4, c => 3}, 'right result';
 
