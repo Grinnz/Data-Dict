@@ -23,6 +23,14 @@ is_deeply $dict->delete('z')->to_hash, {z => undef}, 'right result';
 is_deeply $dict->delete(qw(b c d))->to_hash, {b => undef, c => 3, d => 4}, 'right result';
 is_deeply {%$dict}, {e => 5}, 'right result';
 
+$dict = d(a => 1, b => 2, c => 3, d => 4, e => 5);
+is_deeply $dict->delete('a')->TO_JSON, {a => 1}, 'right result using TO_JSON';
+is_deeply $dict->delete('b')->TO_JSON, {b => 2}, 'right result using TO_JSON';
+is_deeply $dict->delete('a')->TO_JSON, {a => undef}, 'right result using TO_JSON';
+is_deeply {%$dict}, {c => 3, d => 4, e => 5}, 'right result using TO_JSON';
+is_deeply $dict->delete('z')->TO_JSON, {z => undef}, 'right result using TO_JSON';
+is_deeply $dict->delete(qw(b c d))->TO_JSON, {b => undef, c => 3, d => 4}, 'right result using TO_JSON';
+
 # each
 $dict = d(a => 3, b => 2, c => 1);
 my @keys = keys %$dict;
