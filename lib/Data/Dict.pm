@@ -82,7 +82,7 @@ sub map_sorted {
 }
 
 sub map_sorted_c {
-  Carp::croak 'Mojo::Collection is required for map_c' unless HAS_COLLECTION;
+  Carp::croak 'Mojo::Collection is required for map_sorted_c' unless HAS_COLLECTION;
   my $self = shift;
   return Mojo::Collection->new($self->map_sorted(@_));
 }
@@ -105,6 +105,16 @@ sub to_array { [%{$_[0]}] }
 sub to_array_sorted {
   my $self = shift;
   return [map { ($_, $self->{$_}) } sort keys %$self];
+}
+
+sub to_collection {
+  Carp::croak 'Mojo::Collection is required for to_collection' unless HAS_COLLECTION;
+  return Mojo::Collection->new(%{$_[0]});
+}
+
+sub to_collection_sorted {
+  Carp::croak 'Mojo::Collection is required for to_collection_sorted' unless HAS_COLLECTION;
+  return Mojo::Collection->new(@{shift->to_array_sorted});
 }
 
 sub to_hash { +{%{$_[0]}} }
@@ -174,7 +184,7 @@ Data::Dict - Hash-based dictionary object
 
 L<Data::Dict> is a hash-based container for dictionaries, with heavy
 inspiration from L<Mojo::Collection>. Unless otherwise noted, all methods
-iterate through keys and values in default key order, which is random but
+iterate through keys and values in default keys order, which is random but
 consistent until the hash is modified.
 
   # Access hash directly to manipulate dictionary
@@ -242,14 +252,14 @@ L<Mojo::Collection>.
   $dict     = $dict->each_sorted(sub {...});
 
 As in L</"each">, but the pairs are returned or the callback is called in
-sorted-key order.
+sorted keys order.
 
 =head2 each_sorted_c
 
   my $collection = $dict->each_sorted_c;
 
-As in L</"each_sorted">, but the pairs are returned in sorted-key order.
-Requires L<Mojo::Collection>.
+As in L</"each_c">, but the pairs are added to the collection in sorted keys
+order. Requires L<Mojo::Collection>.
 
 =head2 extract
 
@@ -320,13 +330,13 @@ arguments. Requires L<Mojo::Collection>.
 
   my @results = $dict->map_sorted(sub {...});
 
-As in L</"map">, but the callback is evaluated in sorted-key order.
+As in L</"map">, but the callback is evaluated in sorted keys order.
 
 =head2 map_sorted_c
 
   my $collection = $dict->map_sorted_c(sub {...});
 
-As in L</"map_c">, but the callback is evaluated in sorted-key order. Requires
+As in L</"map_c">, but the callback is evaluated in sorted keys order. Requires
 L<Mojo::Collection>.
 
 =head2 size
@@ -341,8 +351,8 @@ Number of keys in dictionary.
 
 Create a new dictionary with all selected keys.
 
-  print join ' ', d(a => 1, b => 2, c => 3)->slice('a', 'c')->map(sub { join ':', @_ });
-  # a:1 c:3
+  print join ' ', d(a => 1, b => 2, c => 3)->slice('a', 'c')
+    ->map_sorted(sub { join ':', @_ }); # a:1 c:3
 
 =head2 tap
 
@@ -362,7 +372,20 @@ Turn dictionary into even-sized array reference.
 
   my $array = $dict->to_array_sorted;
 
-Turn dictionary into even-sized array reference in sorted-key order.
+Turn dictionary into even-sized array reference in sorted keys order.
+
+=head2 to_collection
+
+  my $collection = $dict->to_collection;
+
+Turn dictionary into even-sized collection. Requires L<Mojo::Collection>.
+
+=head2 to_collection_sorted
+
+  my $collection = $dict->to_collection_sorted;
+
+Turn dictionary into even-sized collection in sorted keys order. Requires
+L<Mojo::Collection>.
 
 =head2 to_hash
 

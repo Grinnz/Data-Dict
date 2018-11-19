@@ -5,11 +5,27 @@ use Test::More;
 use Data::Dict 'd';
 use Scalar::Util 'blessed';
 
-# each_c
-my $dict = d(a => 3, b => 2, c => 1);
+# to_collection
+my $dict = d(a => 3, b => 2, c => 3);
 my @keys = keys %$dict;
 my @values = values %$dict;
-my $c = $dict->each_c;
+my $c = $dict->to_collection;
+ok blessed($c) && $c->isa('Mojo::Collection'), 'collection object';
+is_deeply [@$c], [$keys[0], $values[0], $keys[1], $values[1], $keys[2], $values[2]], 'right elements';
+
+# to_collection_sorted
+$dict = d(a => 3, b => 2, c => 3);
+@keys = sort keys %$dict;
+@values = @$dict{sort keys %$dict};
+$c = $dict->to_collection_sorted;
+ok blessed($c) && $c->isa('Mojo::Collection'), 'collection object';
+is_deeply [@$c], [$keys[0], $values[0], $keys[1], $values[1], $keys[2], $values[2]], 'right elements';
+
+# each_c
+$dict = d(a => 3, b => 2, c => 1);
+@keys = keys %$dict;
+@values = values %$dict;
+$c = $dict->each_c;
 ok blessed($c) && $c->isa('Mojo::Collection'), 'collection object';
 is_deeply [map { [@$_] } @$c], [[$keys[0],$values[0]], [$keys[1],$values[1]], [$keys[2],$values[2]]], 'right elements';
 
