@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+0.002     2018-11-18 20:37:38 EST
   - Quick incompatible change: methods now operate in default keys order for efficiency unless otherwise noted.
   - Added methods to operate in sorted keys order: each_sorted, each_sorted_c, map_sorted, map_sorted_c
   - Replaced method to_array with to_collection and to_collection_sorted
